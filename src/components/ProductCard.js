@@ -33,9 +33,21 @@ export default function ProductCard({ product }) {
             </div>
           )}
 
-          {/* Hover “Buy / Add to Cart” Button */}
-          <div className="absolute bottom-0 left-0 w-full translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-            <div className="block w-full text-center bg-black text-white py-3 text-sm uppercase font-light tracking-widest hover:bg-purple-600 transition">
+          {/* Hover / Fixed Button */}
+          <div
+            className="
+              absolute bottom-0 left-0 w-full 
+              transition-transform duration-300
+              md:translate-y-full md:group-hover:translate-y-0 
+              sm:translate-y-0 sm:group-hover:translate-y-0
+            "
+          >
+            <div
+              className="
+                block w-auto mx-5 my-5 text-center bg-black text-white py-3 text-sm uppercase font-light tracking-widest 
+                hover:bg-purple-600 transition
+              "
+            >
               Buy / Add to Cart
             </div>
           </div>
@@ -50,7 +62,7 @@ export default function ProductCard({ product }) {
             Rs.{Number(product.price).toFixed(2)}
           </div>
 
-          {/* 5 Stars Filled */}
+          {/* Ratings */}
           <div className="flex justify-center mt-2 items-center">
             {[...Array(5)].map((_, i) => (
               <Star
