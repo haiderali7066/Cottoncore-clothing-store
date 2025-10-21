@@ -61,7 +61,7 @@ function ProductsContent() {
             onClick={() => filterByCategory(cat)}
             className={`px-5 py-2 rounded-full border transition-all duration-200 ${
               activeCategory === cat
-                ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                ? "bg-gray-500 text-white  shadow-md"
                 : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50"
             }`}
           >
