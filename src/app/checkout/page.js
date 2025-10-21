@@ -8,26 +8,21 @@ export default function CheckoutPage() {
   const searchParams = useSearchParams();
   const productId = searchParams.get("product");
 
-  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState([]);
   const [total, setTotal] = useState(0);
   const [form, setForm] = useState({ name: "", phone: "", address: "" });
-  const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(true);
+  const [placingOrder, setPlacingOrder] = useState(false);
 
-  // Load cart or single product
   useEffect(() => {
     async function loadData() {
-      setMounted(true);
-
       if (productId) {
         try {
           const res = await fetch(`/api/products?id=${productId}`);
           const data = await res.json();
           if (data && data._id) {
-            const item = { ...data, qty: 1 };
-            setCart([item]);
-            setTotal(item.price);
+            setCart([{ ...data, qty: 1 }]);
+            setTotal(data.price);
           } else {
             alert("Product not found");
           }
@@ -35,52 +30,34 @@ export default function CheckoutPage() {
           alert("Failed to fetch product");
         }
       } else {
-        const raw = localStorage.getItem("cart");
-        const parsed = raw ? JSON.parse(raw) : [];
-        setCart(parsed);
-        const sum = parsed.reduce((acc, i) => acc + i.price * (i.qty || 1), 0);
-        setTotal(sum);
+        const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
+        setCart(savedCart);
+        setTotal(savedCart.reduce((acc, i) => acc + i.price * (i.qty || 1), 0));
       }
-
-      setFetching(false);
+      setLoading(false);
     }
 
     loadData();
   }, [productId]);
 
-  if (!mounted || fetching)
-    return (
-      <div className="p-6 text-center text-gray-700">Loading checkout...</div>
-    );
-
-  // Place order
-  async function placeOrder(e) {
+  const placeOrder = async (e) => {
     e.preventDefault();
-
     if (!form.name || !form.phone || !form.address)
       return alert("Please fill all fields");
     if (!cart.length) return alert("No items to order");
 
-    setLoading(true);
+    setPlacingOrder(true);
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name,
-          phone: form.phone,
-          address: form.address,
-          items: cart,
-          total,
-        }),
+        body: JSON.stringify({ ...form, items: cart, total }),
       });
 
       const data = await res.json();
 
       if (res.ok && data.success && data.order?._id) {
         const order = data.order;
-
-        // Save full order info
         localStorage.setItem(
           "lastOrder",
           JSON.stringify({
@@ -94,7 +71,6 @@ export default function CheckoutPage() {
             date: new Date(order.createdAt).toLocaleString(),
           })
         );
-
         localStorage.removeItem("cart");
         router.push("/order-success");
       } else {
@@ -104,9 +80,14 @@ export default function CheckoutPage() {
       console.error(err);
       alert("Error placing order");
     } finally {
-      setLoading(false);
+      setPlacingOrder(false);
     }
-  }
+  };
+
+  if (loading)
+    return (
+      <div className="p-6 text-center text-gray-700">Loading checkout...</div>
+    );
 
   return (
     <section className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-12 md:py-16">
@@ -213,10 +194,10 @@ export default function CheckoutPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={placingOrder}
             className="w-full bg-black text-white py-3 rounded-xl font-semibold hover:bg-purple-600 transition"
           >
-            {loading ? "Placing Order..." : "Place Order (COD)"}
+            {placingOrder ? "Placing Order..." : "Place Order (COD)"}
           </button>
         </form>
       </div>
